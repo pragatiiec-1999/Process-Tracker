@@ -25,29 +25,21 @@ st.set_page_config(
 # --- BASE64 IMAGE CONVERTER (The Cloud Fix) ---
 def get_base64(file_path):
     import os
-    # List of possible paths to check (Cloud vs Local)
-    possible_paths = [
-        file_path,                          # e.g., "app/static/bg1.jpg"
-        file_path.replace("app/", ""),      # e.g., "static/bg1.jpg"
-        os.path.join(os.getcwd(), file_path) # Absolute path
-    ]
+    # We remove the "app/" prefix because GitHub/Streamlit root starts at the repo level
+    clean_path = file_path.replace("app/", "")
     
-    for path in possible_paths:
-        if os.path.exists(path):
-            with open(path, 'rb') as f:
-                return base64.b64encode(f.read()).decode()
-    
-    # If it gets here, it failed. Let's show the error for just this file.
-    st.error(f"❌ File Not Found: {file_path}")
+    if os.path.exists(clean_path):
+        with open(clean_path, 'rb') as f:
+            return base64.b64encode(f.read()).decode()
     return ""
 
-# Convert images (Keep your names exactly like this)
-bg1_b64 = get_base64("app/static/bg1.jpg")
-bg2_b64 = get_base64("app/static/bg2.jpg")
-bg3_b64 = get_base64("app/static/bg3.jpg")
-bg4_b64 = get_base64("app/static/bg4.jpg")
-logo_b64 = get_base64("app/static/logo_clear.png")
-iec_logo_b64 = get_base64("app/static/icon4.png")
+# Updated Paths (Removing 'app/' prefix)
+bg1_b64 = get_base64("static/bg1.jpg")
+bg2_b64 = get_base64("static/bg2.jpg")
+bg3_b64 = get_base64("static/bg3.jpg")
+bg4_b64 = get_base64("static/bg4.jpg")
+logo_b64 = get_base64("static/logo_clear.png")
+iec_logo_b64 = get_base64("static/iec_logo.png")
 
 # --- 1.5 PROFESSIONAL DARK MODE & ANIMATED BACKGROUND ---
 if 'dark_mode' not in st.session_state:
@@ -294,11 +286,11 @@ elif st.session_state.current_page == 'CHAT_PAGE':
         trigger_leaf()
         st.session_state.trigger_leaf = False
 
-    # 2. SUCCESS PAGE UI (Hides Chat)
+   # 2. SUCCESS PAGE UI (Hides Chat)
     if st.session_state.form_completed:
-        st.markdown("""
+        st.markdown(f"""
             <div class="success-card">
-                <<img src="data:image/png;base64,{iec_logo_b64}" style="height: 60px; margin-bottom: 20px;">
+                <img src="data:image/png;base64,{iec_logo_b64}" style="height: 60px; margin-bottom: 20px;">
                 <h2 style="color: #0072CE;">Your response has been recorded.</h2>
                 <p style="color: #5f6368;">Thank you for completing the assessment.</p>
             </div>
