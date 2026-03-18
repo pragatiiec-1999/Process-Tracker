@@ -47,7 +47,7 @@ bg2_b64 = get_base64("app/static/bg2.jpg")
 bg3_b64 = get_base64("app/static/bg3.jpg")
 bg4_b64 = get_base64("app/static/bg4.jpg")
 logo_b64 = get_base64("app/static/logo_clear.png")
-iec_logo_b64 = get_base64("app/static/iec_logo.png")
+iec_logo_b64 = get_base64("app/static/icon4.png")
 
 # --- 1.5 PROFESSIONAL DARK MODE & ANIMATED BACKGROUND ---
 if 'dark_mode' not in st.session_state:
