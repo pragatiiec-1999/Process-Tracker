@@ -156,31 +156,46 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# --- THE BADGE NUKE (Actively destroys the Streamlit Ribbon) ---
+# --- THE ULTIMATE BADGE ASSASSIN (MutationObserver) ---
 components.html("""
     <script>
+        // Target the parent window where Streamlit lives
+        const doc = window.parent.document;
+
+        // Function to specifically hunt down the GitHub and Streamlit badges
         function destroyBadges() {
-            // Target the parent window where Streamlit lives
-            const doc = window.parent.document;
+            // Grab all floating divs and iframes at the bottom of the page
+            const elements = doc.querySelectorAll('div, iframe');
             
-            // Hunt down the specific elements by class or text
-            const badges = doc.querySelectorAll('[class*="viewerBadge"], [class*="stDeployButton"]');
-            badges.forEach(badge => badge.remove());
-            
-            // Streamlit sometimes hides the ribbon in an iframe at the bottom
-            const iframes = doc.querySelectorAll('iframe');
-            iframes.forEach(iframe => {
-                if (iframe.title === "streamlit_app" || (iframe.src && iframe.src.includes('badge'))) {
-                    // Do not delete our own components, only the badge iframe
-                    if(iframe.style.height === "0px") return; 
-                    iframe.style.display = 'none';
+            elements.forEach(el => {
+                // Look for the specific text inside the elements
+                if (el.innerHTML && (el.innerHTML.includes('Hosted with Streamlit') || el.innerHTML.includes('Created by'))) {
+                    el.style.display = 'none';
+                    el.style.opacity = '0';
+                    el.remove();
+                }
+                
+                // Target the specific iframe Streamlit sometimes uses for the badge
+                if (el.tagName.toLowerCase() === 'iframe' && el.src && el.src.includes('badge')) {
+                    el.style.display = 'none';
+                    el.remove();
                 }
             });
         }
-        
-        // Run immediately, and then keep checking every 1 second
+
+        // 1. Run immediately on load
         destroyBadges();
-        setInterval(destroyBadges, 1000);
+
+        // 2. The MutationObserver: Watches the DOM for changes and attacks instantly
+        const observer = new MutationObserver((mutations) => {
+            destroyBadges();
+        });
+
+        // Start observing the entire body of the app for injected elements
+        observer.observe(doc.body, { childList: true, subtree: true });
+        
+        // 3. A rapid-fire fallback interval just in case Streamlit delays the load
+        setInterval(destroyBadges, 100);
     </script>
 """, height=0)
 
