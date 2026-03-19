@@ -467,7 +467,7 @@ elif st.session_state.current_page == 'CHAT_PAGE':
             st.markdown(f"""
                 <div class="true-fixed-header">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <img src="data:image/png;base64,{logo_b64}" alt="IEC Logo" style="height: 80px; object-fit: contain;">
+                        <img src="data:image/png;base64,{logo_b64}" alt="IEC Logo" style="height: 55px; object-fit: contain;">
                         <div style="text-align: right; font-size: 0.85rem; color: {theme_muted}; line-height: 1.2;">
                             <b>Observer:</b> {st.session_state.rm_data.get('Observer', 'Unknown')}<br>
                             <b>School:</b> {st.session_state.rm_data.get('School_Name', 'Unknown')}
