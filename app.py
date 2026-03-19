@@ -130,14 +130,16 @@ st.markdown(f"""
         transform: translateX(-50%); 
         overflow: hidden; 
         margin-top: -3rem; 
-        margin-bottom: -30px; 
+        
+        /* Pull the toggle switch a bit higher into the faded area for better blending */
+        margin-bottom: -50px; 
         background-color: transparent; 
         box-shadow: none !important;
         border-bottom: none !important;
         
-        /* 1. Changed 50% to 80%: The image stays 100% solid until the very bottom */
-        mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
-        -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+        /* 1. The Long Fade: Starts at 60% down the image, giving it a massive area to slowly vanish */
+        mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
     }}
 
     .full-bleed-banner::after {{
@@ -145,8 +147,8 @@ st.markdown(f"""
         position: absolute;
         bottom: 0; left: 0; right: 0;
         
-        /* 2. Reduced height from 180px to 90px: The color tint only hugs the bottom edge */
-        height: 90px;
+        /* 2. The Tall Overlay: Matches the long fade distance (160px) so the color blends perfectly */
+        height: 160px;
         background: linear-gradient(to bottom, transparent 0%, {theme_fade_color} 100%);
         z-index: 2;
         pointer-events: none;
