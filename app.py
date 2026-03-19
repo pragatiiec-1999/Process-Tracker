@@ -57,7 +57,8 @@ if 'dark_mode' not in st.session_state:
 
 if st.session_state.dark_mode:
     theme_bg_gradient = "linear-gradient(-45deg, #0f172a, #1e1b4b, #064e3b, #171717)"
-    theme_card = "#1e293b"      
+    theme_fade_color = "#0f172a"   # NEW: Matches the dark background
+    theme_card = "#1e293b"  
     theme_text = "#f8fafc"      
     theme_border = "#334155"
     theme_bot_bubble = "#1e293b"
@@ -67,6 +68,7 @@ if st.session_state.dark_mode:
     theme_card_rgb = "30, 41, 59"
 else:
     theme_bg_gradient = "linear-gradient(-45deg, #f8fafc, #e0f2fe, #f1f5f9, #ecfdf5)"
+    theme_fade_color = "#f8fafc"   # NEW: Matches the light background
     theme_card = "#ffffff"
     theme_text = "#0f172a"
     theme_border = "#cbd5e1"
