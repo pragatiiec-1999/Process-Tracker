@@ -20,8 +20,8 @@ def setup_google_sheet():
             "School Name", "UDISE Code", "Observer Name"
         ]
         
-        # 4. Extract Question Text from your logic file
-        question_headers = [q["text"] for q in questions_list]
+        # 4. Extract Question Text and add Q numbers (e.g., "Q1: What is...")
+        question_headers = [f"Q{i+1}: {q['text']}" for i, q in enumerate(questions_list)]
         
         # 5. Combine them
         full_headers = metadata_headers + question_headers
