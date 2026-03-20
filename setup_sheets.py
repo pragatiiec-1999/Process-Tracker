@@ -12,12 +12,13 @@ def setup_google_sheet():
         # 2. Open the sheet (Make sure you created it and shared it first!)
         sheet = client.open("IEC Process Tracker 2026").sheet1
         
-        # 3. Define the Metadata Headers
+        # 3. Define the Metadata Headers (ADDED ROLE AND POST HERE)
         metadata_headers = [
             "Submission ID", "Date", "Time", 
             "State", "District", "Block", "Cluster", 
             "GP/NP", "Gram Panchayat", "School Type", 
-            "School Name", "UDISE Code", "Observer Name"
+            "School Name", "UDISE Code", "Observer Name",
+            "Role", "Post"
         ]
         
         # 4. Extract Question Text and add Q numbers (e.g., "Q1: What is...")

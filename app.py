@@ -193,8 +193,7 @@ def save_to_google_sheets(rm_data):
     ]
     
     for q in questions_list:
-        ans_key = f"ans_{q['id']}"
-        ans = st.session_state.get(ans_key, None)
+        ans = st.session_state.answers_dict.get(q['id'], None)  # Grabs from permanent memory
         if ans is None or ans == "":
             data_row.append("")
         else:
@@ -234,6 +233,7 @@ if 'rm_data' not in st.session_state: st.session_state.rm_data = {}
 if 'active_q_idx' not in st.session_state: st.session_state.active_q_idx = 0
 if 'form_completed' not in st.session_state: st.session_state.form_completed = False
 if 'trigger_scroll' not in st.session_state: st.session_state.trigger_scroll = False
+if 'answers_dict' not in st.session_state: st.session_state.answers_dict = {}
 
 if 'data_loaded' not in st.session_state:
     loader_placeholder = st.empty()
@@ -380,7 +380,7 @@ elif st.session_state.current_page == 'PORTAL_PAGE':
 
     else:
         # THE FLICKER FIX: Calculate values instantly before injecting the HTML
-        answered_count = len([k for k,v in st.session_state.items() if k.startswith('ans_') and v not in [None, ""]])
+        answered_count = len([k for k,v in st.session_state.answers_dict.items() if v not in [None, ""]])
         progress_pct = int((answered_count / total_q) * 100) if total_q > 0 else 0
 
         # Inject fixed header directly (No empty placeholder delay)
@@ -425,7 +425,7 @@ elif st.session_state.current_page == 'PORTAL_PAGE':
                     q_num_display = str(global_idx + 1)
                     
                     ans_key = f"ans_{q['id']}"
-                    is_answered = st.session_state.get(ans_key) not in [None, ""]
+                    is_answered = st.session_state.answers_dict.get(q['id']) not in [None, ""]
                     btn_type = "primary" if is_answered else "secondary"
                     
                     with cols[c_idx % 5]:
@@ -460,23 +460,31 @@ elif st.session_state.current_page == 'PORTAL_PAGE':
                 st.write("")
                 
                 ans_key = f"ans_{active_q['id']}"
+                saved_val = st.session_state.answers_dict.get(active_q['id'])
+
+                # Callback function to instantly save data to permanent memory
+                def update_answer(q_id):
+                    st.session_state.answers_dict[q_id] = st.session_state[f"ans_{q_id}"]
                 
                 if active_q["type"] == "dropdown":
                     options = active_q["options"]
+                    idx = options.index(saved_val) if saved_val in options else None
                     if len(options) <= 5:
-                        st.radio("Select an option:", options, index=None, key=ans_key)
+                        st.radio("Select an option:", options, index=idx, key=ans_key, on_change=update_answer, args=(active_q['id'],))
                     else:
-                        st.selectbox("Select an option:", options, index=None, placeholder="Choose an option...", key=ans_key)
+                        st.selectbox("Select an option:", options, index=idx, placeholder="Choose an option...", key=ans_key, on_change=update_answer, args=(active_q['id'],))
                         
                 elif active_q["type"] == "numeric":
-                    st.number_input("Enter a number:", value=None, step=1.0, key=ans_key)
+                    val = float(saved_val) if saved_val not in [None, ""] else None
+                    st.number_input("Enter a number:", value=val, step=1.0, key=ans_key, on_change=update_answer, args=(active_q['id'],))
 
                 elif active_q["type"] == "text":
-                    # ADAPTIVE TEXT AREA FIX: Added height and better placeholder
-                    st.text_area("Observations:", value=None, height=150, placeholder="Enter detailed observations here...", key=ans_key)
+                    val = saved_val if saved_val is not None else ""
+                    st.text_area("Observations:", value=val, height=150, placeholder="Enter detailed observations here...", key=ans_key, on_change=update_answer, args=(active_q['id'],))
 
                 elif active_q["type"] == "date":
-                    st.date_input("Select a Date:", value=None, key=ans_key)
+                    val = saved_val if saved_val not in [None, ""] else None
+                    st.date_input("Select a Date:", value=val, key=ans_key, on_change=update_answer, args=(active_q['id'],))
 
             st.write("")
             
