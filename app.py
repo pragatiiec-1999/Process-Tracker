@@ -91,6 +91,15 @@ st.markdown(f"""
     ul[data-baseweb="menu"] {{ background-color: {theme_card} !important; border: 1px solid {theme_border} !important; }}
     ul[data-baseweb="menu"] li {{ color: {theme_text} !important; }}
 
+    /* --- FIX FOR CHAT & DATE INPUT DARK MODE --- */
+    div[data-testid="stChatInput"] {{ background-color: {theme_card} !important; border: 1px solid {theme_border} !important; }}
+    div[data-testid="stChatInput"] textarea {{ color: {theme_text} !important; caret-color: {theme_text} !important; background-color: transparent !important; }}
+    div[data-testid="stChatInput"] svg {{ fill: {theme_text} !important; }}
+    
+    div[data-baseweb="input"] {{ background-color: {theme_card} !important; border: 1px solid {theme_border} !important; }}
+    div[data-baseweb="input"] input {{ color: {theme_text} !important; -webkit-text-fill-color: {theme_text} !important; caret-color: {theme_text} !important; background-color: transparent !important; }}
+    div[data-testid="stDateInput"] svg {{ fill: {theme_text} !important; }}
+    
     .full-bleed-banner {{ 
         width: 100vw; height: 380px; position: relative; left: 50%; transform: translateX(-50%); overflow: hidden; 
         margin-top: -3rem; margin-bottom: -50px; background-color: transparent; 
