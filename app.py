@@ -221,15 +221,32 @@ if 'trigger_leaf' not in st.session_state: st.session_state.trigger_leaf = False
 
 if 'data_loaded' not in st.session_state:
     loader_placeholder = st.empty()
+    # True Fixed Overlay Splash Screen
     loader_placeholder.markdown(f"""
-        <div style='display: flex; flex-direction: column; justify-content: center; align-items: center; height: 75vh;'>
-            <img src='data:image/png;base64,{logo_b64}' style='height: 150px; margin-bottom: 35px; animation: pulse 2s infinite;'>
+        <div class="splash-screen">
+            <img src='data:image/png;base64,{logo_b64}' class="splash-logo">
             <h4 style='color: #0072CE; font-weight: 600; margin-bottom: 20px; font-size: 1.3rem;'>Initializing Secure Portal...</h4>
             <div style='width: 300px; height: 6px; background: {theme_border}; border-radius: 10px; overflow: hidden;'>
                 <div style='width: 50%; height: 100%; background: #0072CE; animation: slide 1.5s infinite linear;'></div>
             </div>
         </div>
         <style>
+            .splash-screen {{
+                position: fixed; 
+                top: 0; left: 0; 
+                width: 100vw; height: 100vh;
+                background-color: {theme_fade_color}; 
+                z-index: 9999999;
+                display: flex; 
+                flex-direction: column; 
+                justify-content: center; 
+                align-items: center;
+            }}
+            .splash-logo {{ 
+                height: 150px; 
+                margin-bottom: 35px; 
+                animation: pulse 2s infinite; 
+            }}
             @keyframes pulse {{ 0% {{ transform: scale(1); opacity: 0.8; }} 50% {{ transform: scale(1.05); opacity: 1; }} 100% {{ transform: scale(1); opacity: 0.8; }} }} 
             @keyframes slide {{ 0% {{ transform: translateX(-100%); }} 100% {{ transform: translateX(200%); }} }}
         </style>
