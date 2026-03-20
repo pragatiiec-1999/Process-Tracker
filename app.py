@@ -1,8 +1,6 @@
 import streamlit as st
-import pandas as pd
 import time
 import streamlit.components.v1 as components
-import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 from modules.chatbot_logic import questions_list
@@ -163,7 +161,7 @@ def scroll_to_top():
 def save_to_google_sheets(rm_data, chat_history):
     import time
     from datetime import datetime
-    
+    import gspread
     now = datetime.now()
     date_str = now.strftime("%Y-%m-%d")
     time_str = now.strftime("%H:%M:%S")
@@ -201,6 +199,7 @@ def save_to_google_sheets(rm_data, chat_history):
 # --- 4. DATA LOADER ---
 @st.cache_data(show_spinner=False)
 def load_rm_data():
+    import pandas as pd
     file_name = "Process Tracker-2026-27.xlsx - RM.csv"
     try:
         xl = pd.ExcelFile(file_name, engine='openpyxl')
@@ -223,14 +222,17 @@ if 'trigger_leaf' not in st.session_state: st.session_state.trigger_leaf = False
 if 'data_loaded' not in st.session_state:
     loader_placeholder = st.empty()
     loader_placeholder.markdown(f"""
-        <div style='text-align: center; padding-top: 25vh;'>
-            <img src='data:image/png;base64,{logo_b64}' style='height: 80px; margin-bottom: 25px; animation: pulse 2s infinite;'>
-            <h4 style='color: #0072CE; font-weight: 500;'>Initializing Secure Portal...</h4>
-            <div style='width: 250px; height: 4px; background: {theme_border}; margin: 0 auto; border-radius: 4px; overflow: hidden;'>
+        <div style='display: flex; flex-direction: column; justify-content: center; align-items: center; height: 75vh;'>
+            <img src='data:image/png;base64,{logo_b64}' style='height: 150px; margin-bottom: 35px; animation: pulse 2s infinite;'>
+            <h4 style='color: #0072CE; font-weight: 600; margin-bottom: 20px; font-size: 1.3rem;'>Initializing Secure Portal...</h4>
+            <div style='width: 300px; height: 6px; background: {theme_border}; border-radius: 10px; overflow: hidden;'>
                 <div style='width: 50%; height: 100%; background: #0072CE; animation: slide 1.5s infinite linear;'></div>
             </div>
         </div>
-        <style>@keyframes pulse {{ 0% {{ transform: scale(1); opacity: 0.8; }} 50% {{ transform: scale(1.05); opacity: 1; }} 100% {{ transform: scale(1); opacity: 0.8; }} }} @keyframes slide {{ 0% {{ transform: translateX(-100%); }} 100% {{ transform: translateX(200%); }} }}</style>
+        <style>
+            @keyframes pulse {{ 0% {{ transform: scale(1); opacity: 0.8; }} 50% {{ transform: scale(1.05); opacity: 1; }} 100% {{ transform: scale(1); opacity: 0.8; }} }} 
+            @keyframes slide {{ 0% {{ transform: translateX(-100%); }} 100% {{ transform: translateX(200%); }} }}
+        </style>
     """, unsafe_allow_html=True)
     
     df_rm = load_rm_data()
