@@ -91,21 +91,43 @@ st.markdown(f"""
     ul[data-baseweb="menu"] {{ background-color: {theme_card} !important; border: 1px solid {theme_border} !important; }}
     ul[data-baseweb="menu"] li {{ color: {theme_text} !important; }}
 
-   /* --- FIX FOR CHAT & DATE INPUT DARK MODE --- */
+   /* ========================================================
+       MASTER FORM & INPUT THEME FIX (DROPDOWNS, CHAT, DATES)
+       ======================================================== */
+    
     /* 1. Kills the giant white block at the bottom of the screen */
     [data-testid="stBottom"] {{ background-color: {theme_fade_color} !important; }}
     [data-testid="stBottom"] > div {{ background-color: {theme_fade_color} !important; }}
-    
-    /* 2. Styles the actual Chat Input box */
-    [data-testid="stChatInput"] {{ background-color: {theme_card} !important; border: 1px solid {theme_border} !important; }}
-    [data-testid="stChatInput"] textarea {{ color: {theme_text} !important; -webkit-text-fill-color: {theme_text} !important; caret-color: {theme_text} !important; background-color: transparent !important; }}
-    [data-testid="stChatInput"] svg {{ fill: {theme_text} !important; }}
-    
-    /* 3. Styles the Date Picker and Numeric Inputs */
-    div[data-baseweb="input"] {{ background-color: {theme_card} !important; border: 1px solid {theme_border} !important; }}
-    div[data-baseweb="input"] input {{ color: {theme_text} !important; -webkit-text-fill-color: {theme_text} !important; caret-color: {theme_text} !important; background-color: transparent !important; }}
+
+    /* 2. Chat Input Container (Absolute Override) */
+    div[data-testid="stChatInput"] {{ background-color: transparent !important; border: none !important; }}
+    div[data-testid="stChatInput"] > div {{ background-color: {theme_card} !important; border: 1px solid {theme_border} !important; border-radius: 10px !important; }}
+    div[data-testid="stChatInput"] textarea {{ color: {theme_text} !important; -webkit-text-fill-color: {theme_text} !important; caret-color: {theme_text} !important; }}
+    div[data-testid="stChatInput"] svg {{ fill: {theme_text} !important; }}
+
+    /* 3. Text, Numeric, and Date Inputs (Deep Override) */
+    div[data-testid="stDateInput"] div[data-baseweb="input"], 
+    div[data-testid="stTextInput"] div[data-baseweb="input"],
+    div[data-testid="stNumberInput"] div[data-baseweb="input"] {{ 
+        background-color: {theme_card} !important; 
+        border: 1px solid {theme_border} !important; 
+    }}
+    div[data-baseweb="base-input"] {{ background-color: transparent !important; }}
+    div[data-baseweb="input"] input {{ color: {theme_text} !important; -webkit-text-fill-color: {theme_text} !important; caret-color: {theme_text} !important; }}
     div[data-testid="stDateInput"] label p {{ color: {theme_text} !important; }}
     div[data-testid="stDateInput"] svg {{ fill: {theme_text} !important; }}
+
+    /* 4. Dropdown Selectboxes (The button itself) */
+    .stSelectbox div[data-baseweb="select"] {{ background-color: {theme_card} !important; border-radius: 12px !important; border-color: {theme_border} !important; }}
+    .stSelectbox div[data-baseweb="select"] > div {{ background-color: transparent !important; color: {theme_text} !important; }}
+    div[data-baseweb="select"] span {{ color: {theme_text} !important; }}
+    div[data-testid="stWidgetLabel"] p, div[data-testid="stWidgetLabel"] span {{ color: {theme_text} !important; }}
+    
+    /* 5. Dropdown Popover Menus (The list that pops open) */
+    div[data-baseweb="popover"] > div {{ background-color: {theme_card} !important; border: 1px solid {theme_border} !important; }}
+    ul[data-baseweb="menu"] {{ background-color: {theme_card} !important; }}
+    ul[data-baseweb="menu"] li {{ color: {theme_text} !important; background-color: {theme_card} !important; }}
+    ul[data-baseweb="menu"] li:hover {{ background-color: {theme_border} !important; }}
     
     .full-bleed-banner {{ 
         width: 100vw; height: 380px; position: relative; left: 50%; transform: translateX(-50%); overflow: hidden; 
@@ -480,10 +502,10 @@ elif st.session_state.current_page == 'CHAT_PAGE':
                                     process_answer(opt)
                     else:
                         st.write("---")
-                        selected_opt = st.selectbox("Select an option:", [""] + options, key=f"sel_{st.session_state.current_q_index}")
-                        if selected_opt != "":
+                        selected_opt = st.selectbox("Select an option:", options, index=None, placeholder="Select an option...", key=f"sel_{st.session_state.current_q_index}")
+                        if selected_opt is not None:
                             if st.button("Submit Answer", type="primary"):
-                                process_answer(selected_opt)
+                                process_answer(selected_opt)    
 
                 elif current_q["type"] in ["text", "numeric"]:
                     ans = st.chat_input("Type your response here...")
