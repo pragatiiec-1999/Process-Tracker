@@ -119,8 +119,8 @@ st.markdown(f"""
 
     /* 4. Dropdown Selectboxes (The button itself) */
     .stSelectbox div[data-baseweb="select"] {{ background-color: {theme_card} !important; border-radius: 12px !important; border-color: {theme_border} !important; }}
-    .stSelectbox div[data-baseweb="select"] > div {{ background-color: transparent !important; color: {theme_text} !important; }}
-    div[data-baseweb="select"] span {{ color: {theme_text} !important; }}
+    .stSelectbox div[data-baseweb="select"] * {{ color: {theme_text} !important; }}
+    .stSelectbox div[data-baseweb="select"] svg {{ fill: {theme_text} !important; }}
     div[data-testid="stWidgetLabel"] p, div[data-testid="stWidgetLabel"] span {{ color: {theme_text} !important; }}
     
     /* 5. Dropdown Popover Menus (The list that pops open) */
