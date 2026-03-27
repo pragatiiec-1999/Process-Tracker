@@ -363,15 +363,18 @@ if "user_email" not in st.session_state:
     st.stop()
 
 
-# ==========================================
-# 3. SECURE APP INITIALIZATION 
-# ==========================================
-# 1. Connection initialize karein
 @st.cache_resource
 def init_connection():
     try:
-        return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
-    except: return None
+        # Render ke variables check karega, agar nahi toh local secrets
+        url = os.environ.get("SUPABASE_URL") or st.secrets.get("supabase", {}).get("url")
+        key = os.environ.get("SUPABASE_KEY") or st.secrets.get("supabase", {}).get("key")
+        
+        if url and key:
+            return create_client(url, key)
+        return None
+    except Exception as e:
+        return None
 
 supabase = init_connection()
 
