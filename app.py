@@ -274,6 +274,44 @@ st.markdown(f"""
     [data-testid="stHeaderActionElements"] {{
         display: none !important;
     }}
+
+    /* =========================================
+       OAUTH BUTTON FIX (CENTERING & SIZING)
+       ========================================= */
+    .centered-oauth-btn {{
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important;
+        margin-top: 15px !important;
+    }}
+
+    /* Force the iframe to behave like a normal centered button */
+    iframe[title*="streamlit_oauth"] {{
+        width: 100% !important;
+        max-width: 260px !important; /* Locks button size */
+        margin: 0 auto !important;
+        display: block !important;
+        border-radius: 8px !important;
+    }}
+
+    /* Target the invisible parent container Streamlit creates */
+    div.element-container:has(iframe[title*="streamlit_oauth"]) {{
+        display: flex !important;
+        justify-content: center !important;
+        width: 100% !important;
+        background: transparent !important; 
+    }}
+
+    /* =========================================
+       MOBILE RESPONSIVENESS (LOGIN BUTTON)
+       ========================================= */
+    @media (max-width: 768px) {{
+        div[data-testid="column"] {{
+            width: 100% !important;
+            flex: 1 1 100% !important;
+        }}
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -341,14 +379,16 @@ if "user_email" not in st.session_state:
                 else:
                     auth_redirect_uri = "http://localhost:8501"
 
-                # --- THE SQUEEZE FIX ---
-                inner_c1, inner_c2, inner_c3 = st.columns([1.5, 2.5, 1.5])
-                with inner_c2:
-                    result = oauth2.authorize_button(
-                        "Login", 
-                        redirect_uri=auth_redirect_uri, 
-                        scope="openid email profile"
-                    )
+                # --- PERFECTLY CENTERED BUTTON WRAPPER (NO COLUMNS) ---
+                st.markdown("<div class='centered-oauth-btn'>", unsafe_allow_html=True)
+                
+                result = oauth2.authorize_button(
+                    "Login", 
+                    redirect_uri=auth_redirect_uri, 
+                    scope="openid email profile"
+                )
+                
+                st.markdown("</div>", unsafe_allow_html=True)
 
                 if result and "token" in result:
                     id_token = result["token"]["id_token"]
@@ -477,7 +517,7 @@ elif st.session_state.step == 'GATEWAY':
             
             t_names = sorted(list(set([r.get("Teachers' Name") for r in config.RM_DATA if r.get("Teachers' Name")])))
             
-            u_name_choice = st.selectbox("Observer Name", t_names + ["Other (Manual Entry)"], index=None, placeholder="Select your name...")
+            u_name_choice = st.selectbox("Name", t_names + ["Other (Manual Entry)"], index=None, placeholder="Select your name...")
             if u_name_choice == "Other (Manual Entry)":
                 u_name = st.text_input("Type your name here")
             else:
@@ -548,8 +588,67 @@ elif st.session_state.step == 'QUESTIONNAIRE':
 
     st.divider()
     
-    # This remains transparent due to the CSS we updated earlier
-    st.file_uploader("Browse Document", type=['pdf', 'xlsx', 'docx'], label_visibility="collapsed")
+    # --- CUSTOM REACT-STYLE UPLOADER ---
+    uploader_html = """
+    <div id="upload-container" style="
+        border: 2px dashed #0072CE;
+        border-radius: 15px;
+        padding: 40px;
+        text-align: center;
+        background: rgba(0, 114, 206, 0.05);
+        cursor: pointer;
+        transition: 0.3s;
+        font-family: 'Inter', sans-serif;
+    " onmouseover="this.style.background='rgba(0, 114, 206, 0.1)'" 
+       onmouseout="this.style.background='rgba(0, 114, 206, 0.05)'">
+        
+        <div style="font-size: 40px; margin-bottom: 10px;">📁</div>
+        <div style="color: #0072CE; font-weight: 600; font-size: 18px;">
+            Click or Drag Assets Here
+        </div>
+        <div style="color: #64748b; font-size: 14px; margin-top: 5px;">
+            Support for PDF, XLSX, DOCX, PNG, JPG (Max 20MB)
+        </div>
+        
+        <button style="
+            margin-top: 20px;
+            background: #0072CE;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        ">Browse Files</button>
+        
+        <input type="file" id="fileInput" style="display:none" accept=".pdf,.xlsx,.docx,.png,.jpg,.jpeg">
+    </div>
+
+    <script>
+        const container = document.getElementById('upload-container');
+        const input = document.getElementById('fileInput');
+        
+        container.onclick = () => input.click();
+        
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if(file) {
+                // PREMIUM SUCCESS ANIMATION
+                container.innerHTML = `
+                    <div style="font-size: 45px; margin-bottom: 10px; animation: popIn 0.5s ease;">✅</div>
+                    <div style="color: #0f172a; font-weight: 600; font-size: 16px;">${file.name}</div>
+                    <div style="color: #10b981; font-size: 14px; margin-top: 5px; font-weight: 500;">Ready for submission</div>
+                `;
+                container.style.border = "2px solid #10b981";
+                container.style.background = "rgba(16, 185, 129, 0.05)";
+            }
+        };
+    </script>
+    <style>
+        @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    </style>
+    """
+    components.html(uploader_html, height=260)
     
     st.markdown('<div class="red-tilt-note">सबमिट करने के बाद कोई बदलाव संभव नहीं है / Final Submission: Records cannot be modified after confirmation.</div>', unsafe_allow_html=True)
     st.write("")
