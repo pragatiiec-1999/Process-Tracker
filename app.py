@@ -799,90 +799,84 @@ elif st.session_state.step == 'PARTICIPATION':
     
 elif st.session_state.step == 'RM_PAGE':
     st.markdown('<div class="fade-in">', unsafe_allow_html=True)
-    st.markdown("<h3 style='color: #0072CE; margin-bottom: 20px;'>अपने क्षेत्र / विद्यालय का चयन करें</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #0072CE; text-align: center;'>अपने क्षेत्र / विद्यालय का चयन करें</h3>", unsafe_allow_html=True)
+    st.write("")
     
     raw_data = config.RM_DATA
 
-    # --- INITIALIZE SMART AUTO-FILL STATE ---
-    rm_keys = ['rm_state', 'rm_dist', 'rm_block', 'rm_cluster', 'rm_gp_choice', 'rm_school_choice', 'rm_teacher_choice']
-    for k in rm_keys:
-        if k not in st.session_state:
-            st.session_state[k] = None
-
-    # --- AUTO FILL CALLBACK WIZARDRY ---
-    # Jab School select hoga, ye automatically uske related data se upper inputs bhar dega
-    def on_school_change():
-        sch = st.session_state.rm_school_choice
-        if sch and sch != "Other (Manual Entry)":
-            for r in raw_data:
-                if r.get('School Name') == sch:
-                    if r.get('State'): st.session_state.rm_state = r.get('State')
-                    if r.get('District'): st.session_state.rm_dist = r.get('District')
-                    if r.get('Block'): st.session_state.rm_block = r.get('Block')
-                    if r.get('Cluster'): st.session_state.rm_cluster = r.get('Cluster')
-                    if r.get('Gram Panchayat'): st.session_state.rm_gp_choice = r.get('Gram Panchayat')
-                    break
-
-    # --- STRICT HIERARCHY LOGIC (Disabled if upper not filled) ---
-    state_list = sorted(list(set(r.get('State') for r in raw_data if r.get('State'))))
-    
-    dist_list = []
-    if st.session_state.rm_state:
-        dist_list = sorted(list(set(r.get('District') for r in raw_data if r.get('State') == st.session_state.rm_state and r.get('District'))))
-    
-    block_list = []
-    if st.session_state.rm_dist:
-        block_list = sorted(list(set(r.get('Block') for r in raw_data if r.get('District') == st.session_state.rm_dist and r.get('Block'))))
-    
-    cluster_list = []
-    if st.session_state.rm_block:
-        cluster_list = sorted(list(set(r.get('Cluster') for r in raw_data if r.get('Block') == st.session_state.rm_block and r.get('Cluster'))))
+    with st.container(border=True):
+        c1, c2 = st.columns(2)
         
-    gp_list = []
-    if st.session_state.rm_cluster:
-        gp_list = sorted(list(set(r.get('Gram Panchayat') for r in raw_data if r.get('Cluster') == st.session_state.rm_cluster and r.get('Gram Panchayat'))))
+        with c1:
+            # 1. STRICT LOCATION FUNNEL
+            state_opts = sorted(list(set(r.get('State') for r in raw_data if r.get('State'))))
+            state_choice = st.selectbox("State", state_opts, index=None, placeholder="1. Select State...", key="rm_state")
+            
+            dist_opts = []
+            if state_choice:
+                dist_opts = sorted(list(set(r.get('District') for r in raw_data if r.get('State') == state_choice and r.get('District'))))
+            dist_choice = st.selectbox("District", dist_opts, index=None, placeholder="2. Select District...", key="rm_dist", disabled=not state_choice)
+            
+            block_opts = []
+            if dist_choice:
+                block_opts = sorted(list(set(r.get('Block') for r in raw_data if r.get('District') == dist_choice and r.get('Block'))))
+            block_choice = st.selectbox("Block", block_opts, index=None, placeholder="3. Select Block...", key="rm_block", disabled=not dist_choice)
+            
+            cluster_opts = []
+            if block_choice:
+                cluster_opts = sorted(list(set(r.get('Cluster') for r in raw_data if r.get('Block') == block_choice and r.get('Cluster'))))
+            cluster_choice = st.selectbox("Cluster", cluster_opts, index=None, placeholder="4. Select Cluster...", key="rm_cluster", disabled=not block_choice)
 
-    s_list = sorted(list(set(r.get('School Name') for r in raw_data if r.get('School Name'))))
-    t_list = sorted(list(set(r.get("Teachers' Name") for r in raw_data if r.get("Teachers' Name"))))
-
-    c1, c2 = st.columns(2)
-    
-    with c1:
-        st.selectbox("State", state_list, key='rm_state', index=None, placeholder="Select State...")
-        st.selectbox("District", dist_list, key='rm_dist', index=None, placeholder="Select District...", disabled=not st.session_state.rm_state)
-        st.selectbox("Block", block_list, key='rm_block', index=None, placeholder="Select Block...", disabled=not st.session_state.rm_dist)
-        st.selectbox("Cluster", cluster_list, key='rm_cluster', index=None, placeholder="Select Cluster...", disabled=not st.session_state.rm_block)
+            gp_opts = []
+            if cluster_choice:
+                gp_opts = sorted(list(set(r.get('Gram Panchayat') for r in raw_data if r.get('Cluster') == cluster_choice and r.get('Gram Panchayat'))))
+            
+            gp_choice = st.selectbox("Gram Panchayat", gp_opts + ["Other (Manual Entry)"], index=None, placeholder="5. Select GP...", key="rm_gp_choice", disabled=not cluster_choice)
+            gp_sel = st.text_input("Type Gram Panchayat Name") if gp_choice == "Other (Manual Entry)" else gp_choice
         
-        # Manual entry logic kept intact
-        gp_choice = st.selectbox("Gram Panchayat Name", gp_list + ["Other (Manual Entry)"], key='rm_gp_choice', index=None, placeholder="Select GP...")
-        gp_sel = st.text_input("Type Gram Panchayat Name") if gp_choice == "Other (Manual Entry)" else gp_choice
+        with c2:
+            # 2. 🔥 SMART SCHOOL FILTERING 🔥
+            if gp_choice and gp_choice != "Other (Manual Entry)":
+                filtered_schools = sorted(list(set(r.get('School Name') for r in raw_data if r.get('Gram Panchayat') == gp_choice and r.get('School Name'))))
+            elif cluster_choice:
+                filtered_schools = sorted(list(set(r.get('School Name') for r in raw_data if r.get('Cluster') == cluster_choice and r.get('School Name'))))
+            elif block_choice:
+                filtered_schools = sorted(list(set(r.get('School Name') for r in raw_data if r.get('Block') == block_choice and r.get('School Name'))))
+            elif dist_choice:
+                filtered_schools = sorted(list(set(r.get('School Name') for r in raw_data if r.get('District') == dist_choice and r.get('School Name'))))
+            elif state_choice:
+                filtered_schools = sorted(list(set(r.get('School Name') for r in raw_data if r.get('State') == state_choice and r.get('School Name'))))
+            else:
+                filtered_schools = sorted(list(set(r.get('School Name') for r in raw_data if r.get('School Name'))))
+            
+            school_choice = st.selectbox("School Name", filtered_schools + ["Other (Manual Entry)"], index=None, placeholder="Select or Type School...", key="rm_school_choice")
+            school_sel = st.text_input("Type School Name") if school_choice == "Other (Manual Entry)" else school_choice
+            
+            # 3. UDISE LOGIC
+            hidden_udise = None 
+            if school_choice and school_choice != "Other (Manual Entry)":
+                for r in raw_data:
+                    if r.get('School Name') == school_choice:
+                        val = r.get('UDISE Code')
+                        hidden_udise = str(val).strip() if val else None
+                        break
+            
+            # 4. 🔥 SMART TEACHER FILTERING 🔥
+            if school_choice and school_choice != "Other (Manual Entry)":
+                teacher_opts = sorted(list(set(r.get("Teachers' Name") for r in raw_data if r.get('School Name') == school_choice and r.get("Teachers' Name"))))
+            else:
+                teacher_opts = sorted(list(set(r.get("Teachers' Name") for r in raw_data if r.get("Teachers' Name"))))
+            
+            teacher_choice = st.selectbox("Teacher Name", teacher_opts + ["Other (Manual Entry)"], index=None, placeholder="Select or Type Teacher...", key="rm_teacher_choice")
+            teacher_sel = st.text_input("Type Teacher Name") if teacher_choice == "Other (Manual Entry)" else teacher_choice
 
-    with c2:
-        # School field triggers the callback
-        school_choice = st.selectbox("School Name", s_list + ["Other (Manual Entry)"], key='rm_school_choice', index=None, placeholder="Select School...", on_change=on_school_change)
-        school_sel = st.text_input("Type School Name") if school_choice == "Other (Manual Entry)" else school_choice
-        
-        # 🔥 STRICT UDISE LOGIC 🔥
-        hidden_udise = None # Default to None
-        
-        # Only fetch UDISE if a real school from the dropdown is actively selected
-        if school_choice and school_choice != "Other (Manual Entry)":
-            for r in raw_data:
-                if r.get('School Name') == school_choice:
-                    val = r.get('UDISE Code')
-                    if val:
-                        hidden_udise = str(val).strip()
-                    break
 
-        teacher_choice = st.selectbox("Teacher Name", t_list + ["Other (Manual Entry)"], key='rm_teacher_choice', index=None, placeholder="Select Teacher...")
-        teacher_sel = st.text_input("Type Teacher Name") if teacher_choice == "Other (Manual Entry)" else teacher_choice
-    
+    # --- FINAL SUBMISSION LOGIC ---
     if st.button("Confirm & Submit", type="primary", use_container_width=True):
-        if not st.session_state.rm_state:
+        if not state_choice:
             st.error("Error: State is mandatory. Please select a state before submitting.")
         else:
             with st.spinner("Saving..."):
-                
                 file_urls = []
                 urls_string = None  
                 
@@ -893,23 +887,19 @@ elif st.session_state.step == 'RM_PAGE':
                 if file_urls:
                     urls_string = ", ".join(file_urls)
                     
-                # 4 Columns REMOVED from the payload to match your request
-                # 4 Columns REMOVED from the payload to match your request
                 db_payload = {
                     "verified_email": st.session_state.get('user_email', 'Unauthenticated User'),
                     "selected_name": st.session_state.responses.get('observer_name'),
                     "process_type": st.session_state.responses.get('process_type'), 
-                    "state": st.session_state.rm_state,
-                    "district": st.session_state.rm_dist,
-                    "block": st.session_state.rm_block,
-                    "cluster": st.session_state.rm_cluster,
+                    "state": state_choice,
+                    "district": dist_choice,
+                    "block": block_choice,
+                    "cluster": cluster_choice,
                     "gram_panchayat": gp_sel,
                     "udise_code": hidden_udise,
                     "teachers_name": teacher_sel,
                     "attachment_url": urls_string, 
                     "answers": {k:v for k,v in st.session_state.responses.items() if k not in ['observer_name', 'process_type']},
-                    
-                    # 🔥 NEW: YEH LINE MISSING THI, ISKE BINA PARTICIPATION SAVE NAHI HOGA 🔥
                     "participation_details": st.session_state.get('participation_responses', {})
                 }
                 
