@@ -1083,9 +1083,28 @@ questions_list = [
             "स्वयं सीखने और आत्ममंथन करने पर कार्य",
             "स्वयं का मूल्यांकन"
         ]
+    },
+    # --- OTHER PROCESS ---
+    {
+        "id": "OTH_01",
+        "text": "अन्य प्रक्रिया का नाम निर्दिष्ट करें",
+        "type": "Text",
+        "category": "Other",
+        "options": []
+    },
+    {
+        "id": "OTH_02",
+        "text": "प्रक्रिया का स्तर:",
+        "type": "Dropdown",
+        "category": "Other",
+        "options": [
+             "Village",
+             "Block",
+             "District",
+             "GP",
+             "Cluster"
+        ]
     }
-    
-    
 ]
 
 # --- PART 2: PROCESS FIELD INDICATORS (Checkboxes) ---
@@ -1649,7 +1668,40 @@ indicator_list = [
         "id": "BESC_25",
         "text": "बैठक 2 घंटे से अधिक समय तक चली",
         "category": "BESC"
-    }
+    },
+    # --- LN_SUPPORT INDICATORS ---
+    {"id": "LN_01", "text": "नेवीगेटर एप प्लेटफार्म को समझ के साथ देख कर प्लेटफार्म के अन्तर्गत मुख्य आईकन का उपयोग, शिक्षक द्वारा किया गया", "category": "LN_Support"},
+    {"id": "LN_02", "text": "लर्निंग जर्नी, प्लानिंग, स्टूडेंट लोकेटर, प्रदर्शन सारांश आदि मुख्य फीचर्स की समझ बनाने पर चर्चा हुई", "category": "LN_Support"},
+    {"id": "LN_03", "text": "दैनिक योजना के अंतर्गत रिसोर्स और आंकलन  संयोजित करने पर विमर्श हुआ", "category": "LN_Support"},
+    {"id": "LN_04", "text": "छात्रों के लर्निंग चेलेंज को जानते हुए उसे दूर करने के लिए सम्भावित योजना पर समझ बनाई गई", "category": "LN_Support"},
+    {"id": "LN_05", "text": "छात्रों की सीखने की गति को ध्यान में रखते हुए कक्षा कक्ष में प्रत्येक छात्र के अनुसार एप का उपयोग करने पर विमर्श हुआ", "category": "LN_Support"},
+    {"id": "LN_06", "text": "नेवीगेटर एप केा और बेहतर बनाने के लिये, शिक्षक ने सुझाव भी दिये", "category": "LN_Support"},
+    {"id": "LN_07", "text": "शिक्षक स्वयं भी गतिविधियों को डिजाइन कर एप में समाहित करने के लिए प्रस्तुत की", "category": "LN_Support"},
+    {"id": "LN_08", "text": "प्लेटफार्म पर नये बच्चों को जोड़ने और हटाने के लिए आवश्यक समझ है - यह प्रकट हुआ", "category": "LN_Support"},
+    {"id": "LN_09", "text": "आंकलन और संसाधन के आपसी तालमेल को ठीक से समझाते हुए कार्य किया", "category": "LN_Support"},
+    {"id": "LN_10", "text": "आंकलन और संसाधन की शेड्यूलिंग में सहयोग किया गया", "category": "LN_Support"},
+    {"id": "LN_11", "text": "बिना सहयोग के आंकलन और संसाधन की शेड्यूलिंग, शिक्षक द्वारा की गई", "category": "LN_Support"},
+    {"id": "LN_12", "text": "पिछले सहयोग भ्रमण के बाद स्वयं से भी प्लेटफोर्म का उपयोग किया गया", "category": "LN_Support"},
+    {"id": "LN_13", "text": "शिक्षक, अलग-अलग छात्रों की प्रगति, प्लेटफोर्म में जाकर आसानी से, बिना सहयोग के देख सके", "category": "LN_Support"},
+    {"id": "LN_14", "text": "विभिन्न विश्लेषण रिपोर्ट देखने में मदद की गई", "category": "LN_Support"},
+    {"id": "LN_15", "text": "विभिन्न विश्लेषण रिपोर्ट बिना किसी मदद के, शिक्षक स्वयं देख सके", "category": "LN_Support"},
+    {"id": "LN_16", "text": "प्रत्येक दक्षता के बाद अगली दक्षता के सापेक्ष स्वयं प्लेटफोर्म का उपयोग करने की प्रक्रिया अपनाई", "category": "LN_Support"},
+    {"id": "LN_18", "text": "शिक्षक ने अपने अनुभव के आधार पर, किसी अन्य शिक्षक को प्लेटफोर्म के महत्व और उपयोग के तरीके, विस्तार से समझाए", "category": "LN_Support"},
+    {"id": "LN_17", "text": "बिना किसी मदद के, शिक्षक द्वारा एप को ओपन किया गया", "category": "LN_Support"},
+    {"id": "LN_19", "text": "मोबाइल में उपलब्ध विभिन्न एप को उपयोग करने में कुछ मदद करनी पड़ी", "category": "LN_Support"},
+    {"id": "LN_20", "text": "लर्निंग नेविगेटर को अपडेट करने में मदद की गई", "category": "LN_Support"},
+    {"id": "LN_21", "text": "एप के उपयोग के दौरान AI की भूमिका पर भी चर्चा की गई", "category": "LN_Support"},
+    {"id": "LN_22", "text": "आज के भ्रमण के दौरान सप्ताह में एक बार, स्वयं से उपयोग की स्थिति देखी गई", "category": "LN_Support"},
+    {"id": "LN_23", "text": "पिछले भ्रमण के बाद आज ही पहली बार एप को ओपन किया गया", "category": "LN_Support"},
+    {"id": "LN_24", "text": "अगली योजना के अंतर्गत कॉल करके सहयोग देने का निर्णय लिया गया और दिनांक निर्धारित किया गया", "category": "LN_Support"},
+    {"id": "LN_25", "text": "आज ही आगे का कम से कम एक संसाधन और आंकलन शेड्यूल किया गया", "category": "LN_Support"},
+    {"id": "LN_26", "text": "आंकलन के आंकड़े दर्ज करने में मदद की गई", "category": "LN_Support"},
+    {"id": "LN_27", "text": "बिना आंकलन की शीट उपलब्ध कराये, प्लेटफोर्म से देखकर ही आंकलन आयोजित किया गया", "category": "LN_Support"},
+    {"id": "LN_28", "text": "शिक्षक, पाठ्यपुस्तक के अतिरिक्त भी विषय के अलग-अलग पहलुओं को समझ पा रहे थे", "category": "LN_Support"},
+    {"id": "LN_29", "text": "अवधारणाओं को स्पष्ट करने के लिए विविध वस्तुओं-स्थितियों की भी मदद ली गई", "category": "LN_Support"},
+    {"id": "LN_30", "text": "प्लेटफोर्म में उपलब्ध विविध संसाधनों को, प्रभावी तरीके से समझ बनाने के लिए प्रदर्शित किया गया", "category": "LN_Support"},
+    {"id": "LN_31", "text": "प्लेटफोर्म के संसाधनों को वास्तविक जीवन से जोड़ते हुए, दक्षता पर स्पष्टता दी गई", "category": "LN_Support"}
+
 ]
 
 # --- PART 3: HELPER FUNCTIONS ---
@@ -1658,3 +1710,34 @@ def get_form_questions(selected_category):
 
 def get_process_indicators(selected_category):
     return [ind for ind in indicator_list if ind.get('category') == selected_category]
+
+
+# ==========================================
+# 👇 यहाँ से आपका नया कोड शुरू होगा 👇
+# ==========================================
+
+# --- PART 4: PARTICIPATION QUESTIONS (Strictly Hindi as per Spreadsheet) ---
+participation_questions_list = [
+    {"id": "p01", "text": "इस प्रक्रिया में कितने शिक्षक शामिल हुए?", "type": "numeric"},
+    {"id": "p02", "text": "कितने छात्रों ने प्रक्रिया में भाग लिया?", "type": "numeric"},
+    {"id": "p03", "text": "कितने SMC सदस्य इस प्रक्रिया में शामिल हुए?", "type": "numeric"},
+    {"id": "p04", "text": "कितने Elected PRI members इस प्रक्रिया में शामिल हुए?", "type": "numeric"},
+    {"id": "p05", "text": "कितने PRI department members इस प्रक्रिया में शामिल हुए?", "type": "numeric"},
+    {"id": "p06", "text": "प्रक्रिया में कितने अभिभावक मौजूद थे?", "type": "numeric"},
+    {"id": "p07", "text": "प्रक्रिया में कितने ब्लॉक स्तर के अधिकारी शामिल हुए?", "type": "numeric"},
+    {"id": "p08", "text": "प्रक्रिया में कितने जिला स्तर के अधिकारी शामिल हुए?", "type": "numeric"},
+    {"id": "p09", "text": "इस प्रक्रिया में कितने GP अध्यक्ष मौजूद थे?", "type": "numeric"},
+    {"id": "p10", "text": "प्रक्रिया में कितने ZP अध्यक्ष उपस्थित हुए?", "type": "numeric"},
+    {"id": "p11", "text": "इस प्रक्रिया में कितने ब्लॉक अध्यक्ष मौजूद थे?", "type": "numeric"},
+    {"id": "p12", "text": "प्रक्रिया में कितने ARP/BRP/BRC ने भाग लिया?", "type": "numeric"},
+    {"id": "p13", "text": "प्रक्रिया में कितने Sikshak Sankul/CAC/CRC ने भाग लिया?", "type": "numeric"},
+    {"id": "p14", "text": "प्रक्रिया में कितने ICDS विभाग के सदस्य उपस्थित हुए?", "type": "numeric"},
+    {"id": "p15", "text": "How many DIET mentors participated in the process?", "type": "numeric"},
+    {"id": "p16", "text": "कितने State Resource Group के सदस्य प्रक्रिया में शामिल हुए?", "type": "numeric"},
+    {"id": "p17", "text": "प्रक्रिया में कितने स्वास्थ्य विभाग के सदस्य उपस्थित हुए?", "type": "numeric"},
+    {"id": "p18", "text": "कितने District Coordinator Samagra Shiksha के सदस्य उपस्थित हुए?", "type": "numeric"},
+    {"id": "p19", "text": "अन्य सदस्य जिन्होंने प्रक्रिया में भाग लिया?", "type": "numeric"}
+]
+
+def get_participation_questions():
+    return participation_questions_list

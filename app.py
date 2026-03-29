@@ -333,25 +333,23 @@ def scroll_to_top():
 
 
 # ==========================================
-# 2. LOGIN PAGE (THE GATEKEEPER)
+# 2. LOGIN PAGE (THE GATEKEEPER) - CURRENTLY DISABLED
 # ==========================================
 
-# -------------------------------------------------------------------------
-# NON-TECHNICAL HOW-TO: TURNING OFF THE LOGIN SCREEN COMPLETELY
-# If you decide you DO NOT want a login screen anymore, just remove the 
-# hashtag (#) from the start of the line below. 
-# This gives everyone an automatic "VIP Pass" so the app skips the login gate.
-# -------------------------------------------------------------------------
-# st.session_state["user_email"] = "vip_user@no-login-needed.com"
-
-
-# This checks if the user has a VIP pass or has already logged in.
+# --- AUTO-LOGIN (GUEST PASS) ---
+# Ye line ensure karegi ki app bina login ke chal pade aur DB mein error na aaye
 if "user_email" not in st.session_state:
+    st.session_state["user_email"] = "guest_user@iec-portal.in"
+
+
+# --- DISABLED OAUTH PORTAL ---
+# Future ke liye code safe rakha hai. 
+# Dobara ON karne ke liye bas 'if False:' ko 'if "user_email" not in st.session_state:' se badal dein.
+
+if False: 
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     
-    # Outer columns to center the white login box on the screen
     col1, col2, col3 = st.columns([1, 1.5, 1])
-    
     with col2:
         with st.container(border=True):
             st.markdown(f"<div style='text-align: center;'><img src='data:image/png;base64,{logo_b64}' style='height: 100px; margin-bottom: 20px;'></div>", unsafe_allow_html=True)
@@ -360,12 +358,9 @@ if "user_email" not in st.session_state:
             st.write("")
             
             try:
-                # --- RENDER COMPATIBILITY FIX ---
-                # Pehle Render ke Environment Variables check karein, agar nahi hain toh local st.secrets
                 client_id = os.environ.get("GOOGLE_CLIENT_ID") or st.secrets.get("google", {}).get("client_id")
                 client_secret = os.environ.get("GOOGLE_CLIENT_SECRET") or st.secrets.get("google", {}).get("client_secret")
 
-                # Validation: Agar dono jagah kuch nahi mila toh error throw karein
                 if not client_id or not client_secret:
                     raise ValueError("Authentication credentials (Client ID/Secret) missing.")
 
@@ -376,22 +371,11 @@ if "user_email" not in st.session_state:
 
                 oauth2 = OAuth2Component(client_id, client_secret, authorize_url, token_url, refresh_token_url, revoke_url)
                 
-                # --- NEW: CORNER FIX ---
-                st.markdown("""
-                    <style>
-                    iframe, .stButton > button, div[data-testid="stMarkdownContainer"] button {
-                        border-radius: 8px !important;
-                    }
-                    </style>
-                """, unsafe_allow_html=True)
-
-                # --- SMART REDIRECT URL ---
                 if os.environ.get("RENDER"):
                     auth_redirect_uri = "https://pragati-portal.onrender.com"
                 else:
                     auth_redirect_uri = "http://localhost:8501"
 
-                # --- PERFECTLY CENTERED BUTTON WRAPPER (NO COLUMNS) ---
                 st.markdown("<div class='centered-oauth-btn'>", unsafe_allow_html=True)
                 
                 result = oauth2.authorize_button(
@@ -414,7 +398,6 @@ if "user_email" not in st.session_state:
                 st.error(f"Setup Error: {e}") 
                 st.markdown(f"<p style='text-align: center; color: {theme_muted}; font-size: 0.9rem;'>Make sure Environment Variables are set in Render Dashboard.</p>", unsafe_allow_html=True)
                 
-    # Stop the rest of the app from loading until login is successful (or bypassed above)
     st.stop()
 
 
@@ -445,7 +428,7 @@ def upload_multiple_to_bucket(files_list):
             file_bytes = file_obj['bytes']
             file_name = file_obj['name']
             
-            file_path = f"{int(time.time())}_{file_name}"
+            file_path = f"{st.session_state.responses.get('observer_name')}/{st.session_state.responses.get('process_type')}/{int(time.time())}_{file_name}"
             
             supabase.storage.from_("iec_documents").upload(
                 path=file_path,
@@ -519,11 +502,6 @@ html_banner = f"""
 </div>"""
 st.markdown(html_banner, unsafe_allow_html=True)
 
-nav_col1, toggle_col = st.columns([0.8, 0.2])
-with nav_col1:
-    st.caption(f"Authenticated: {st.session_state['user_email']}")
-with toggle_col:
-    st.toggle("Dark Theme", key="dark_mode")
 
 # ==========================================
 # 5. FLOW ROUTING
@@ -551,17 +529,19 @@ elif st.session_state.step == 'GATEWAY':
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         with st.container(border=True):
-            st.markdown("<h3 style='text-align: center;'>Gateway</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align: center;'>IEC Process Tracker 2026-27</h3>", unsafe_allow_html=True)
             
-            t_names = sorted(list(set([r.get("Teachers' Name") for r in config.RM_DATA if r.get("Teachers' Name")])))
+            # --- YAHAN OBSERVER KE NAAM HARDCODE KIYE GAYE HAIN ---
+            gateway_names_str = "Ajay;Alok;Aryendra;Deshraj;Haribhan;Kripa Shankar;Neeraj;Pooja;Sarfaraj;Satyendra;Shivchand;Sudhir Kumar;Sudhir Singh;Vinay;Viswanath;Abhinav;Ashok;Ateeq;Hiteshwari;Rajkumar;Ramdhan;Dilip;Anish Kumar;Haider;Rajeev;Ravindra;Anurag;Bhaskar;Bhawana;Naveen Chandra;Ishtiyak;Mustafa;Dharmendra;Gokul;Naveen;Ashish"
+            g_names = [name.strip() for name in gateway_names_str.split(";")]
             
-            u_name_choice = st.selectbox("Name", t_names + ["Other (Manual Entry)"], index=None, placeholder="Select your name...")
+            u_name_choice = st.selectbox("कृपया अपना नाम चुने", g_names + ["Other (Manual Entry)"], index=None, placeholder="Select your name...")
             if u_name_choice == "Other (Manual Entry)":
                 u_name = st.text_input("Type your name here")
             else:
                 u_name = u_name_choice
                 
-            u_proc = st.selectbox("Process", ["Teacher's Collective", "Classroom Observation","School Visit", "GP", "BPM", "DIET", "BESC"], index=None, placeholder="Select process...")
+            u_proc = st.selectbox("कृपया प्रक्रिया का चयन करे-", ["Teacher's Collective", "Classroom Observation","School Visit", "GP", "BPM", "DIET", "BESC","LN_Support","Other"], index=None, placeholder="Select process...")
             
             if u_name and u_proc:
                 st.session_state.responses['observer_name'] = u_name
@@ -576,68 +556,56 @@ elif st.session_state.step == 'QUESTIONNAIRE':
     proc = st.session_state.responses['process_type']
     
     # ==========================================
-    # NEW: SHOW SELECTED PROCESS BADGE
+    # SHOW SELECTED PROCESS BADGE
     # ==========================================
     st.markdown(f"""
         <div style="background: rgba(0, 114, 206, 0.08); border-left: 5px solid #0072CE; padding: 12px 20px; border-radius: 6px; margin-bottom: 25px;">
-            <div style="color: {theme_muted}; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 500;">Active Assessment</div>
             <div style="color: #0072CE; font-weight: 700; font-size: 1.3rem;">{proc}</div>
         </div>
     """, unsafe_allow_html=True)
     
-    if proc in ["Teacher's Collective", "Classroom Observation", "School Visit"]:
+    if proc in ["Teacher's Collective", "Classroom Observation", "School Visit", "Other"]:
         active_list = logic.get_form_questions(proc)
-        heading = "सभी प्रश्न अनिवार्य हैं / All questions are mandatory"
     else:
         active_list = logic.get_process_indicators(proc)
-        heading = "कृपया इंडिकेटर चुनें / Please select indicators"
+        st.markdown(f"<div style='text-align: center; font-weight: 600; font-size: 1rem; color: {theme_muted}; margin-bottom: 25px;'>{proc} मीटिंग के संकेतक चुनें</div>", unsafe_allow_html=True)
 
-    total_q = len(active_list)
-    answered = len([k for k, v in st.session_state.responses.items() if k in [q['id'] for q in active_list] and v is not None and v is not False and str(v).strip() != ""])
-    progress = int((answered / total_q) * 100) if total_q > 0 else 0
-
-    st.markdown(f"""
-        <div style="position: sticky; top: 20px; z-index: 100; margin-bottom: 30px; padding: 15px; background: {theme_card}; border-radius: 10px; border: 1px solid {theme_border}; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: bold; color: #0072CE;">Assessment Progress</span>
-                <span style="font-weight: bold; color: {theme_text};">{progress}% ({answered}/{total_q})</span>
-            </div>
-            <div style="background:#e2e8f0; border-radius:10px; height:8px; width:100%; margin: 8px 0;">
-                <div style="background:#0072CE; height:8px; width:{progress}%; border-radius:10px; transition: width 0.3s ease;"></div>
-            </div>
-            <div style="text-align: center; font-weight: 600; font-size: 0.95rem; color: {theme_muted};">{heading}</div>
-        </div>
-    """, unsafe_allow_html=True)
 
     for i, q in enumerate(active_list):
         with st.container(border=True):
-            if proc in ["Teacher's Collective", "Classroom Observation", "School Visit"]:
+            if proc in ["Teacher's Collective", "Classroom Observation", "School Visit", "Other"]:
                 st.markdown(f"**Q{i + 1}. {q['text']}**")
                 ans_key = q['id']
                 q_type = str(q.get('type', 'dropdown')).strip().lower()
 
+                # --- NEW: PURANA SAVED DATA NIKALEIN ---
+                saved_val = st.session_state.responses.get(ans_key)
+
                 if q_type in ['dropdown', 'multiple choice']:
                     if q.get('options'):
+                        # Find index if saved value exists
+                        default_idx = q['options'].index(saved_val) if saved_val in q['options'] else None
                         st.session_state.responses[ans_key] = st.selectbox(
-                            "Options", q['options'], index=None, placeholder="Select this according to the question...", 
+                            "Options", q['options'], index=default_idx, placeholder="Select this according to the question...", 
                             label_visibility="collapsed", key=f"ans_{ans_key}"
                         )
                     else:
-                        st.session_state.responses[ans_key] = st.text_input("Input", placeholder="Type your answer here...", label_visibility="collapsed", key=f"ans_{ans_key}")
+                        st.session_state.responses[ans_key] = st.text_input("Input", value=saved_val if saved_val else "", placeholder="Type your answer here...", label_visibility="collapsed", key=f"ans_{ans_key}")
                 elif q_type == 'numeric':
-                    st.session_state.responses[ans_key] = st.number_input("Number", value=None, step=1.0, placeholder="Enter a number...", label_visibility="collapsed", key=f"ans_{ans_key}")
+                    st.session_state.responses[ans_key] = st.number_input("Number", value=float(saved_val) if saved_val else None, step=1.0, placeholder="Enter a number...", label_visibility="collapsed", key=f"ans_{ans_key}")
                 elif q_type == 'date':
-                    st.session_state.responses[ans_key] = st.date_input("Date", value=None, label_visibility="collapsed", key=f"ans_{ans_key}")
+                    st.session_state.responses[ans_key] = st.date_input("Date", value=saved_val if saved_val else None, label_visibility="collapsed", key=f"ans_{ans_key}")
                 else:
-                    st.session_state.responses[ans_key] = st.text_area("Text", placeholder="Provide detailed observations...", label_visibility="collapsed", key=f"ans_{ans_key}")
+                    st.session_state.responses[ans_key] = st.text_area("Text", value=saved_val if saved_val else "", placeholder="Provide detailed observations...", label_visibility="collapsed", key=f"ans_{ans_key}")
             else:
                 st.markdown(f"**{i + 1}. {q['text']}**")
-                # Ensure the checkbox updates the session state correctly
-                st.session_state.responses[q['id']] = st.checkbox(f"Select {q['id']}", key=f"ans_{q['id']}", label_visibility="collapsed")
+                # Checkbox value restoration
+                saved_bool = bool(st.session_state.responses.get(q['id'], False))
+                st.session_state.responses[q['id']] = st.checkbox(f"Select {q['id']}", value=saved_bool, key=f"ans_{q['id']}", label_visibility="collapsed")
 
     st.divider()
     
-    # --- PREMIUM STYLED NATIVE UPLOADER ---
+    # --- PREMIUM STYLED NATIVE UPLOADER (WITH HEROICON) ---
     st.markdown("""
         <style>
         /* Modern Glass Dropzone */
@@ -655,11 +623,21 @@ elif st.session_state.step == 'QUESTIONNAIRE':
         /* Hide Default Boring Cloud Icon */
         [data-testid="stFileUploadDropzone"] svg { display: none !important; }
         
-        /* Inject Custom Folder Emoji & Text */
+        /* Inject Custom Heroicon (Cloud Upload) instead of Folder Emoji */
         [data-testid="stFileUploadDropzone"]::before {
-            content: '📁 Drag and drop files here';
+            content: '';
             display: block;
-            font-size: 20px;
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px auto;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%230072CE'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z' /%3E%3C/svg%3E");
+            background-size: cover;
+        }
+        /* Inject Custom Text below the Heroicon */
+        [data-testid="stFileUploadDropzone"]::after {
+            content: 'Drag and drop files here';
+            display: block;
+            font-size: 18px;
             color: #0072CE;
             font-weight: 600;
             margin-bottom: 10px;
@@ -676,168 +654,269 @@ elif st.session_state.step == 'QUESTIONNAIRE':
         </style>
     """, unsafe_allow_html=True)
     
-    # This is the Streamlit native uploader (100% reliable for passing data)
+    # --- HEROICON SVGS ---
+    hero_check = """<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 24px; height: 24px; margin-right: 8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>"""
+    hero_warn = """<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#d93025" style="width: 20px; height: 20px; margin-right: 8px; flex-shrink: 0;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>"""
+    
+    def show_hero_error(msg):
+        st.markdown(f"""
+            <div style="display: flex; align-items: center; background: rgba(217, 48, 37, 0.08); border: 1px solid rgba(217, 48, 37, 0.2); padding: 12px 16px; border-radius: 8px; color: #d93025; font-weight: 600; margin-bottom: 15px;">
+                {hero_warn} <span>{msg}</span>
+            </div>
+        """, unsafe_allow_html=True)
+        st.stop()
+
+    # ==========================================
+    # SHOW SAVED FILES BADGE (WITH HEROICON)
+    # ==========================================
+    saved_files = st.session_state.get('pending_uploads', [])
+    if len(saved_files) >= 2:
+        file_names = ", ".join([f["name"] for f in saved_files])
+        st.markdown(f"""
+            <div style="background: rgba(46, 204, 113, 0.1); border-left: 5px solid #2ecc71; padding: 12px 20px; border-radius: 6px; margin-bottom: 20px;">
+                <div style="color: #27ae60; font-weight: 700; font-size: 1.1rem; display: flex; align-items: center;">
+                    {hero_check} {len(saved_files)} Files Already Saved
+                </div>
+                <div style="color: {theme_muted}; font-size: 0.9rem; margin-top: 5px;">{file_names}</div>
+                <div style="color: #d93025; font-size: 0.85rem; font-weight: 600; margin-top: 8px;">(Upload new files ONLY if you want to replace the saved ones)</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    # This is the Streamlit native uploader 
     uploaded_files = st.file_uploader(
         "Upload Documents", 
         accept_multiple_files=True, 
-        type=['pdf', 'docx', 'xlsx', 'png', 'jpg', 'jpeg', 'csv', 'txt'], # <-- YEH LINE ADD KI HAI (Blocks Videos)
+        type=['pdf', 'docx', 'xlsx', 'png', 'jpg', 'jpeg', 'csv', 'txt'], 
         label_visibility="collapsed"
     )
     
-    st.markdown('<div class="red-tilt-note">सबमिट करने के बाद कोई बदलाव संभव नहीं है / Final Submission: Records cannot be modified after confirmation.</div>', unsafe_allow_html=True)
+    # Only show the red warning if there are no saved files
+    if len(saved_files) < 2:
+        st.markdown('<div class="red-tilt-note">कृपया प्रक्रिया की कम से कम 2-3 फोटो और दस्तावेज अपलोड करना अनिवार्य है</div>', unsafe_allow_html=True)
     st.write("")
 
-   # --- ENHANCED NEXT BUTTON WITH VALIDATION & FILE SAVING ---
-    if st.button("Next", type="primary", use_container_width=True):
-        # Mandatory Checkbox Validation for Indicator Processes
-        if proc not in ["Teacher's Collective", "Classroom Observation", "School Visit"]:
-            indicator_ids = [q['id'] for q in active_list]
-            is_any_checked = any(st.session_state.responses.get(idx) for idx in indicator_ids)
+    b_col1, b_col2 = st.columns(2)
+    with b_col1:
+        if st.button("Back", use_container_width=True):
+            st.session_state.step = 'GATEWAY'
+            st.session_state.trigger_scroll = True
+            st.rerun()
             
-            if not is_any_checked:
-                st.error("⚠️ कृपया कम से कम एक इंडिकेटer चुनें / Please select at least one indicator.")
-                st.stop()
-        
-        # --- NEW: SAVE FILES TO MEMORY BEFORE SWITCHING PAGES ---
-        st.session_state.pending_uploads = []
-        if 'uploaded_files' in locals() and uploaded_files:
-            for f in uploaded_files:
-                st.session_state.pending_uploads.append({
-                    "name": f.name,
-                    "type": f.type,
-                    "bytes": f.read() # File ka saara data yahan lock ho jayega
-                })
-        
-        # Proceed if validation passes
-        st.session_state.step = 'RM_PAGE'
-        st.session_state.trigger_scroll = True
-        st.rerun()
-        
+    with b_col2:
+        if st.button("Next", type="primary", use_container_width=True):
+            
+            # 1. 🔥 STRICT FORM VALIDATION 🔥
+            if proc in ["Teacher's Collective", "Classroom Observation", "School Visit", "Other"]:
+                # Check if ANY question is left blank
+                missing_answers = False
+                for q in active_list:
+                    ans = st.session_state.responses.get(q['id'])
+                    # Trigger error if answer is None, empty, or just spaces
+                    if ans is None or str(ans).strip() == "":
+                        missing_answers = True
+                        break
+                
+                if missing_answers:
+                    show_hero_error("कृपया आगे बढ़ने से पहले सभी प्रश्नों के उत्तर दें। (Please answer all questions)")
+            else:
+                # For Indicators (GP, BPM, etc.) - At least one must be checked
+                indicator_ids = [q['id'] for q in active_list]
+                is_any_checked = any(st.session_state.responses.get(idx) for idx in indicator_ids)
+                if not is_any_checked:
+                    show_hero_error("कृपया कम से कम एक इंडिकेटर चुनें।")
+            
+            # 2. SMART FILE VALIDATION 
+            if uploaded_files:
+                current_file_count = len(uploaded_files)
+            else:
+                current_file_count = len(saved_files)
+                
+            if current_file_count < 2:
+                show_hero_error("कृपया आगे बढ़ने के लिए कम से कम 2 फाइलें (तस्वीरें/दस्तावेज़) अपलोड करें।")
+            
+            # 3. Save Files to Memory ONLY if the user uploaded NEW files
+            if uploaded_files:
+                st.session_state.pending_uploads = []
+                for f in uploaded_files:
+                    st.session_state.pending_uploads.append({"name": f.name, "type": f.type, "bytes": f.read()})
+            
+            # 4. ROUTE TO PARTICIPATION PAGE
+            st.session_state.step = 'PARTICIPATION' 
+            st.session_state.trigger_scroll = True
+            st.rerun()
+            
     st.markdown('</div>', unsafe_allow_html=True)
-# ------------------------------------------
-# 4. STEP 3: RM PAGE (RELATIONAL DATA, NO AUTO-FILL)
-# ------------------------------------------
+    
+    # ==========================================
+# NEW STEP: PARTICIPATION PAGE
+# ==========================================
+elif st.session_state.step == 'PARTICIPATION':
+    st.markdown('<div class="fade-in">', unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #0072CE; margin-bottom: 5px; text-align: center;'>प्रतिभागियों का विवरण</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #64748b; margin-bottom: 25px;'>कृपया भागीदारी विवरण भरें (सभी विकल्प ऐच्छिक हैं)</p>", unsafe_allow_html=True)
+
+    if 'participation_responses' not in st.session_state:
+        st.session_state.participation_responses = {}
+
+    # Fetching the Hindi questions from chatbot_logic.py
+    part_questions = logic.get_participation_questions()
+
+    with st.container(border=True):
+        col1, col2 = st.columns(2)
+        
+        for i, q in enumerate(part_questions):
+            curr_col = col1 if i % 2 == 0 else col2
+            with curr_col:
+                # --- NEW: PURANA SAVED DATA NIKALEIN ---
+                saved_part_val = st.session_state.participation_responses.get(q['id'], None)
+                
+                # Use saved_part_val as the value parameter
+                st.session_state.participation_responses[q['id']] = st.number_input(
+                    label=q['text'],
+                    min_value=0,
+                    step=1,
+                    value=saved_part_val, 
+                    key=f"part_input_{q['id']}"
+                )
+
+    st.write("")
+    
+    # Back and Next Buttons for Participation Page
+    b_col1, b_col2 = st.columns(2)
+    with b_col1:
+        if st.button("Back", use_container_width=True):
+            st.session_state.step = 'QUESTIONNAIRE' # Wapas form par jane ke liye
+            st.session_state.trigger_scroll = True
+            st.rerun()
+            
+    with b_col2:
+        if st.button("Next", type="primary", use_container_width=True):
+            st.session_state.step = 'RM_PAGE' # Aage RM Page (Final Submit) par jane ke liye
+            st.session_state.trigger_scroll = True
+            st.rerun()
+
+    st.markdown('</div>', unsafe_allow_html=True)
+    
 elif st.session_state.step == 'RM_PAGE':
     st.markdown('<div class="fade-in">', unsafe_allow_html=True)
-    st.title("School Identification & Validation")
-    st.info("Please fill the hierarchy to register this submission.")
-
-    # Access the relational data list of dictionaries
+    st.markdown("<h3 style='color: #0072CE; margin-bottom: 20px;'>अपने क्षेत्र / विद्यालय का चयन करें</h3>", unsafe_allow_html=True)
+    
     raw_data = config.RM_DATA
 
-    # --- 1. STATE SELECTION (STRICTLY MANDATORY) ---
-    state_list = sorted(list(set([r.get('State') for r in raw_data if r.get('State')])))
-    selected_state = st.selectbox("State (Mandatory)", state_list, index=None, placeholder="Select State...")
+    # --- INITIALIZE SMART AUTO-FILL STATE ---
+    rm_keys = ['rm_state', 'rm_dist', 'rm_block', 'rm_cluster', 'rm_gp_choice', 'rm_school_choice', 'rm_teacher_choice']
+    for k in rm_keys:
+        if k not in st.session_state:
+            st.session_state[k] = None
 
-    # Cascading Logic: Filter data based on selected state
-    filtered_data = [r for r in raw_data if r.get('State') == selected_state] if selected_state else raw_data
+    # --- AUTO FILL CALLBACK WIZARDRY ---
+    # Jab School select hoga, ye automatically uske related data se upper inputs bhar dega
+    def on_school_change():
+        sch = st.session_state.rm_school_choice
+        if sch and sch != "Other (Manual Entry)":
+            for r in raw_data:
+                if r.get('School Name') == sch:
+                    if r.get('State'): st.session_state.rm_state = r.get('State')
+                    if r.get('District'): st.session_state.rm_dist = r.get('District')
+                    if r.get('Block'): st.session_state.rm_block = r.get('Block')
+                    if r.get('Cluster'): st.session_state.rm_cluster = r.get('Cluster')
+                    if r.get('Gram Panchayat'): st.session_state.rm_gp_choice = r.get('Gram Panchayat')
+                    break
+
+    # --- STRICT HIERARCHY LOGIC (Disabled if upper not filled) ---
+    state_list = sorted(list(set(r.get('State') for r in raw_data if r.get('State'))))
+    
+    dist_list = []
+    if st.session_state.rm_state:
+        dist_list = sorted(list(set(r.get('District') for r in raw_data if r.get('State') == st.session_state.rm_state and r.get('District'))))
+    
+    block_list = []
+    if st.session_state.rm_dist:
+        block_list = sorted(list(set(r.get('Block') for r in raw_data if r.get('District') == st.session_state.rm_dist and r.get('Block'))))
+    
+    cluster_list = []
+    if st.session_state.rm_block:
+        cluster_list = sorted(list(set(r.get('Cluster') for r in raw_data if r.get('Block') == st.session_state.rm_block and r.get('Cluster'))))
+        
+    gp_list = []
+    if st.session_state.rm_cluster:
+        gp_list = sorted(list(set(r.get('Gram Panchayat') for r in raw_data if r.get('Cluster') == st.session_state.rm_cluster and r.get('Gram Panchayat'))))
+
+    s_list = sorted(list(set(r.get('School Name') for r in raw_data if r.get('School Name'))))
+    t_list = sorted(list(set(r.get("Teachers' Name") for r in raw_data if r.get("Teachers' Name"))))
 
     c1, c2 = st.columns(2)
     
     with c1:
-        # DISTRICT (Strict Dropdown)
-        d_list = sorted(list(set([r.get('District') for r in filtered_data if r.get('District')])))
-        dist = st.selectbox("District", d_list, index=None, placeholder="Select District...")
-        if dist: filtered_data = [r for r in filtered_data if r.get('District') == dist]
-
-        # BLOCK (Strict Dropdown)
-        b_list = sorted(list(set([r.get('Block') for r in filtered_data if r.get('Block')])))
-        block = st.selectbox("Block", b_list, index=None, placeholder="Select Block...")
-        if block: filtered_data = [r for r in filtered_data if r.get('Block') == block]
-
-        # CLUSTER (Strict Dropdown)
-        c_list = sorted(list(set([r.get('Cluster') for r in filtered_data if r.get('Cluster')])))
-        cluster = st.selectbox("Cluster", c_list, index=None, placeholder="Select Cluster...")
-        if cluster: filtered_data = [r for r in filtered_data if r.get('Cluster') == cluster]
+        st.selectbox("State", state_list, key='rm_state', index=None, placeholder="Select State...")
+        st.selectbox("District", dist_list, key='rm_dist', index=None, placeholder="Select District...", disabled=not st.session_state.rm_state)
+        st.selectbox("Block", block_list, key='rm_block', index=None, placeholder="Select Block...", disabled=not st.session_state.rm_dist)
+        st.selectbox("Cluster", cluster_list, key='rm_cluster', index=None, placeholder="Select Cluster...", disabled=not st.session_state.rm_block)
         
-        # GP/NP TYPE (Strict Dropdown)
-        gp_np_list = sorted(list(set([r.get('GP/NP') for r in filtered_data if r.get('GP/NP')])))
-        gp_np_sel = st.selectbox("GP / NP Type", gp_np_list, index=None, placeholder="Select Type...")
-        
-        # GRAM PANCHAYAT (Manual Entry Allowed)
-        gp_list = sorted(list(set([r.get('Gram Panchayat') for r in filtered_data if r.get('Gram Panchayat')])))
-        gp_choice = st.selectbox("Gram Panchayat Name", gp_list + ["Other (Manual Entry)"], index=None, placeholder="Select GP...")
+        # Manual entry logic kept intact
+        gp_choice = st.selectbox("Gram Panchayat Name", gp_list + ["Other (Manual Entry)"], key='rm_gp_choice', index=None, placeholder="Select GP...")
         gp_sel = st.text_input("Type Gram Panchayat Name") if gp_choice == "Other (Manual Entry)" else gp_choice
 
     with c2:
-        # SCHOOL NAME (Manual Entry Allowed)
-        s_list = sorted(list(set([r.get('School Name') for r in filtered_data if r.get('School Name')])))
-        school_choice = st.selectbox("School Name", s_list + ["Other (Manual Entry)"], index=None, placeholder="Select School...")
+        # School field triggers the callback
+        school_choice = st.selectbox("School Name", s_list + ["Other (Manual Entry)"], key='rm_school_choice', index=None, placeholder="Select School...", on_change=on_school_change)
         school_sel = st.text_input("Type School Name") if school_choice == "Other (Manual Entry)" else school_choice
         
-        # --- HIDDEN UDISE CAPTURE LOGIC (No visual auto-fill) ---
-        hidden_udise = ""
+        # 🔥 STRICT UDISE LOGIC 🔥
+        hidden_udise = None # Default to None
+        
+        # Only fetch UDISE if a real school from the dropdown is actively selected
         if school_choice and school_choice != "Other (Manual Entry)":
-            # We check raw_data directly so it always finds the UDISE
             for r in raw_data:
                 if r.get('School Name') == school_choice:
-                    hidden_udise = r.get('UDISE Code', '')
+                    val = r.get('UDISE Code')
+                    if val:
+                        hidden_udise = str(val).strip()
                     break
 
-        # TEACHER NAME (Manual Entry Allowed)
-        t_list = sorted(list(set([r.get("Teachers' Name") for r in filtered_data if r.get("Teachers' Name")])))
-        teacher_choice = st.selectbox("Teacher Name", t_list + ["Other (Manual Entry)"], index=None, placeholder="Select Teacher...")
+        teacher_choice = st.selectbox("Teacher Name", t_list + ["Other (Manual Entry)"], key='rm_teacher_choice', index=None, placeholder="Select Teacher...")
         teacher_sel = st.text_input("Type Teacher Name") if teacher_choice == "Other (Manual Entry)" else teacher_choice
-
-        # SCHOOL TYPE (Strict Dropdown - No Autofill)
-        stype_list = sorted(list(set([r.get('School Type') for r in raw_data if r.get('School Type')])))
-        school_type = st.selectbox("School Type", stype_list, index=None, placeholder="Select Type...")
-
-        # ROLE (Strict Dropdown - No Autofill)
-        role_list = sorted(list(set([r.get('Relevant Role') for r in raw_data if r.get('Relevant Role')])))
-        role = st.selectbox("Role", role_list, index=None, placeholder="Select Role...")
-        
-        # POST (Strict Dropdown - No Autofill)
-        post_list = sorted(list(set([r.get('Post') for r in raw_data if r.get('Post')])))
-        post = st.selectbox("Post", post_list, index=None, placeholder="Select Post...")
-
-    st.markdown('<div class="red-tilt-note">सबमिट करने के बाद कोई बदलाव संभव नहीं है / Final Submission: Records cannot be modified after confirmation.</div>', unsafe_allow_html=True)
     
-    if st.button("Confirm & Submit Assessment", type="primary", use_container_width=True):
-        if not selected_state:
+    if st.button("Confirm & Submit", type="primary", use_container_width=True):
+        if not st.session_state.rm_state:
             st.error("Error: State is mandatory. Please select a state before submitting.")
         else:
-            with st.spinner("Writing to Database..."):
+            with st.spinner("Saving..."):
                 
-                # 1. Initialize variables
                 file_urls = []
                 urls_string = None  
                 
-                # 2. Check Session State for files and upload
                 pending_files = st.session_state.get('pending_uploads', [])
                 if pending_files:
                     file_urls = upload_multiple_to_bucket(pending_files)
 
-                # 3. Join URLs
                 if file_urls:
                     urls_string = ", ".join(file_urls)
                     
-                # 4. Payload
+                # 4 Columns REMOVED from the payload to match your request
+                # 4 Columns REMOVED from the payload to match your request
                 db_payload = {
                     "verified_email": st.session_state.get('user_email', 'Unauthenticated User'),
                     "selected_name": st.session_state.responses.get('observer_name'),
                     "process_type": st.session_state.responses.get('process_type'), 
-                    "state": selected_state,
-                    "district": dist,
-                    "block": block,
-                    "cluster": cluster,
-                    "gp_np": gp_np_sel,       
+                    "state": st.session_state.rm_state,
+                    "district": st.session_state.rm_dist,
+                    "block": st.session_state.rm_block,
+                    "cluster": st.session_state.rm_cluster,
                     "gram_panchayat": gp_sel,
-                    "school_type": school_type,
                     "udise_code": hidden_udise,
                     "teachers_name": teacher_sel,
-                    "role": role,
-                    "post": post,
-                    "attachment_url": urls_string, # Save string of URLs to database
-                    "answers": {k:v for k,v in st.session_state.responses.items() if k not in ['observer_name', 'process_type']}
+                    "attachment_url": urls_string, 
+                    "answers": {k:v for k,v in st.session_state.responses.items() if k not in ['observer_name', 'process_type']},
+                    
+                    # 🔥 NEW: YEH LINE MISSING THI, ISKE BINA PARTICIPATION SAVE NAHI HOGA 🔥
+                    "participation_details": st.session_state.get('participation_responses', {})
                 }
                 
-                # 5. Insert to DB
                 if supabase:
                     try:
                         supabase.table("process_submissions_2026").insert(db_payload).execute()
                         
-                        # Clear memory after successful upload
                         if 'pending_uploads' in st.session_state:
                             del st.session_state['pending_uploads']
                             
