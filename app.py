@@ -7,8 +7,9 @@ from streamlit_oauth import OAuth2Component
 import chatbot_logic as logic 
 import rm_config as config  # Pulls directly from your generated file
 import base64
-from PIL import Image
 import os
+import gc
+from PIL import Image
     
 # ==========================================
 # 1. ENTERPRISE UI CONFIGURATION
@@ -416,7 +417,7 @@ def init_connection():
 
 supabase = init_connection()
 
-# --- NATIVE MULTIPLE BUCKET UPLOAD HELPER ---
+# --- NATIVE MULTIPLE BUCKET UPLOAD HELPER (SMART COMPRESSION) ---
 def upload_multiple_to_bucket(files_list):
     urls = []
     if not files_list:
@@ -424,16 +425,32 @@ def upload_multiple_to_bucket(files_list):
         
     for file_obj in files_list:
         try:
-            # Data from session state dictionary
             file_bytes = file_obj['bytes']
             file_name = file_obj['name']
+            mime_type = file_obj['type']
             
+            # --- CONDITIONAL OPTIMIZATION: ONLY COMPRESS IMAGES > 250 KB ---
+            # 250 KB is exactly 256,000 bytes. 
+            # If the file is smaller than this, it completely skips the compression block.
+            if mime_type in ["image/jpeg", "image/png", "image/jpg"] and len(file_bytes) > 256000:
+                img = Image.open(io.BytesIO(file_bytes))
+                if img.mode in ("RGBA", "P"): 
+                    img = img.convert("RGB")
+                # Resize keeping aspect ratio so it doesn't break mobile browsers
+                img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+                buffer = io.BytesIO()
+                img.save(buffer, format="JPEG", quality=75, optimize=True)
+                file_bytes = buffer.getvalue()
+                file_name = file_name.rsplit('.', 1)[0] + ".jpg"
+                mime_type = "image/jpeg"
+            
+            # --- UPLOAD TO SUPABASE ---
             file_path = f"{st.session_state.responses.get('observer_name')}/{st.session_state.responses.get('process_type')}/{int(time.time())}_{file_name}"
             
             supabase.storage.from_("iec_documents").upload(
                 path=file_path,
                 file=file_bytes,
-                file_options={"content-type": file_obj['type']}
+                file_options={"content-type": mime_type}
             )
             public_url = supabase.storage.from_("iec_documents").get_public_url(file_path)
             urls.append(public_url)
@@ -523,6 +540,13 @@ if st.session_state.form_completed:
             for key in list(st.session_state.keys()):
                 if key not in keys_to_keep:
                     del st.session_state[key]
+            # 🔥 NEW: Force recreate the exact empty dictionaries needed
+            st.session_state.responses = {}
+            st.session_state.participation_responses = {}
+            st.session_state.step = 'GATEWAY'
+            
+            import gc
+            gc.collect() # Clean RAM again       
             st.rerun()
 
 elif st.session_state.step == 'GATEWAY':
@@ -913,6 +937,8 @@ elif st.session_state.step == 'RM_PAGE':
                         time.sleep(1)
                         st.session_state.form_completed = True
                         st.session_state.trigger_scroll = True
+                        import gc
+                        gc.collect()
                         st.rerun()
                     except Exception as e:
                         st.error(f"Database Error: {e}")
